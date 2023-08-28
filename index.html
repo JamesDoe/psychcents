@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Bäro Kiosk UI</title>
+    <script src="https://unpkg.com/vue@3.2.29/dist/vue.global.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow" rel="stylesheet">
+</head>
+<style>
+    body {
+        font-family: Barlow;
+    }
+
+    img {
+        -khtml-user-select: none;
+        -o-user-select: none;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .back path:hover,
+    .back rect:hover {
+        fill: #E31E26;
+    }
+
+    .list-item {
+        display: inline-block;
+        margin-right: 10px;
+        top: 30px;
+        opacity: 0;
+        position: relative;
+        -webkit-text-security: circle;
+        font-size: 24vw;
+        font-weight: 900;
+        user-select: none;
+    }
+
+    .list-enter-active,
+    .list-leave-active {
+        transition: all .38s;
+        transition-timing-function: ease-out
+    }
+
+    .list-enter-to {
+        -webkit-text-security: none;
+    }
+
+    .list-enter-to,
+    .list-item.entered {
+        opacity: 1;
+        top: 0;
+        font-size: 9vw;
+    }
+
+    .list-leave-to {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all .15s;
+    }
+
+    .num-pad {
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 5vw;
+        user-select: none;
+        fill: #A8A8A8;
+    }
+
+    .num-pad-wrapper:last-child:not(.isFilled) {
+        color: #A8A8A8;
+    }
+
+    .isFilled svg {
+        fill: #01A87D;
+    }
+
+    .num-pad-wrapper {
+	--num-pad-width: calc(100%/3);
+	width: var(--num-pad-width);
+        padding: 2vw 0;
+        box-sizing: border-box;
+        overflow: hidden;
+        position: relative;
+        border-radius: 10px;
+    }
+
+
+.num-pad > div:first-child {font-weight: 600}
+
+.full .num-pad-wrapper:not(:last-child) {
+color: #A8A8A8;
+}
+
+.full .num-pad-wrapper:last-child {
+font-weight: 600;
+fill: #01A87D;
+}
+
+
+    span.ripple {
+        position: absolute;
+        /* The absolute position we mentioned earlier */
+        border-radius: 50%;
+        transform: scale(0);
+        animation: ripple 380ms linear;
+        background-color: rgba(228, 73, 37, 0.7);
+    }
+
+    @keyframes ripple {
+        to {
+            transform: scale(4);
+            opacity: 0;
+        }
+    }
+</style>
+
+<body>
+    <div id="app" style="margin-left: auto; margin-right: auto; margin-top: 100px; margin-bottom: 50px;  width: 62vw; max-width: 500px">
+        <div><img style="width: 360px" src="./img/baro_logo.png" draggable="false"></div>
+        <div style="display: flex; align-items: center;">
+            <div
+                style="margin: 20px 5px; height: 150px; width: 62vw; border-radius: 20px; box-sizing: border-box; border: 4px solid #E44925; display:inline-block; position: relative;">
+
+                <transition-group
+                    style="display: flex; height: 100%; align-items: center; margin-left: 30px; margin-top: -1px;"
+                    name="list" tag="div" @after-enter="maskDigit">
+                    <span v-for="digit in digits" v-bind:key="generate_key" class="list-item">
+                        {{ digit }}
+                    </span>
+                </transition-group>
+
+            
+<svg class="back" style="position: absolute;top:0; right: 0" @click="remove" height="100%"
+                clip-rule="evenodd" fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2"
+                viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <rect fill="white" x="8" y="6" width="12" height="12" />
+                <path
+                    d="m22 6.002c0-.552-.448-1-1-1h-12.628c-.437 0-.853.191-1.138.523-1.078 1.256-3.811 4.439-4.993 5.816-.16.187-.241.418-.241.65s.08.464.24.651c1.181 1.38 3.915 4.575 4.994 5.836.285.333.701.524 1.14.524h12.626c.552 0 1-.447 1-1 0-2.577 0-9.423 0-12zm-7.991 4.928 1.71-1.711c.146-.146.339-.219.531-.219.404 0 .75.324.75.749 0 .194-.073.385-.219.532l-1.711 1.71 1.728 1.728c.147.147.22.339.22.531 0 .427-.349.75-.75.75-.192 0-.384-.073-.531-.219l-1.728-1.728-1.728 1.728c-.146.146-.339.219-.531.219-.401 0-.75-.323-.75-.75 0-.192.073-.384.22-.531l1.728-1.728-1.788-1.787c-.146-.147-.219-.338-.219-.531 0-.426.346-.75.751-.75.192 0 .384.073.53.219z"
+                    fill="#E44925" fill-rule="nonzero" />
+            </svg>
+            </div>
+        </div>
+
+        <div style="display:flex; flex-wrap: wrap;" :class="{full: !notFull}">
+
+            <div @click="add" class="num-pad-wrapper" v-for="num in Array(9).fill(null).map((element, index)=>index)">
+                <div class="num-pad">
+                    <div>{{num+1}}</div>
+                    <div>{{letters[num]}}</div>
+                </div>
+            </div>
+
+            <div @click="digits=[]" class="num-pad-wrapper">
+                <div class="num-pad">
+                    <svg width="8vw" clip-rule="evenodd" fill="#E31E26" fill-rule="evenodd" stroke-linejoin="round"
+                        stroke-miterlimit="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="m12 10.93 5.719-5.72c.146-.146.339-.219.531-.219.404 0 .75.324.75.749 0 .193-.073.385-.219.532l-5.72 5.719 5.719 5.719c.147.147.22.339.22.531 0 .427-.349.75-.75.75-.192 0-.385-.073-.531-.219l-5.719-5.719-5.719 5.719c-.146.146-.339.219-.531.219-.401 0-.75-.323-.75-.75 0-.192.073-.384.22-.531l5.719-5.719-5.72-5.719c-.146-.147-.219-.339-.219-.532 0-.425.346-.749.75-.749.192 0 .385.073.531.219z" />
+                    </svg>
+                </div>
+            </div>
+
+            <div @click="add" class="num-pad-wrapper">
+                <div class="num-pad">
+                    <div>0</div>
+                    <div>+</div>
+                </div>
+            </div>
+
+            <div :class="['num-pad-wrapper',{isFilled: digits.length == MAX_DIGITS}]">
+                <div class="num-pad">
+                    <svg width="5vw" clip-rule="evenodd" fill-rule="evenodd" stroke-linejoin="round"
+                        stroke-miterlimit="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="m2.25 12.321 7.27 6.491c.143.127.321.19.499.19.206 0 .41-.084.559-.249l11.23-12.501c.129-.143.192-.321.192-.5 0-.419-.338-.75-.749-.75-.206 0-.411.084-.559.249l-10.731 11.945-6.711-5.994c-.144-.127-.322-.19-.5-.19-.417 0-.75.336-.75.749 0 .206.084.412.25.56"
+                            fill-rule="nonzero" />
+                    </svg>
+                    <div>OK</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- end of app-->
+    </div>
+</body>
+<script>
+    var app = Vue.createApp({
+        data() {
+            return {
+                MAX_DIGITS: 6,
+                digits: [],
+                letters: ['', 'ABC', 'DEF', 'GHI', 'JKL', 'MNO', 'PQRS', 'TUV', 'WXYZ']
+            }
+        },
+	computed: {
+		notFull() {
+			return this.digits.length != this.MAX_DIGITS;
+		}
+	},
+        methods: {
+            maskDigit: function (event) {
+                event.classList.add("entered");
+            },
+            add: function (event) {
+                let wrapper = event.currentTarget;
+                console.log(wrapper.children[0].children[0].innerText);
+                if (this.notFull) {
+                    this.digits.push(Number(wrapper.children[0].children[0].innerText));
+                    let circle = document.createElement("span"),
+                        diameter = Math.max(wrapper.clientWidth, wrapper.clientHeight), radius = diameter / 2;
+                    circle.style.width = circle.style.height = `${diameter}px`;
+                    circle.style.left = `${event.clientX - (wrapper.offsetLeft + radius)}px`;
+                    circle.style.top = `${event.clientY - (wrapper.offsetTop + radius)}px`;
+                    circle.classList.add("ripple");
+                    let ripple = wrapper.getElementsByClassName("ripple")[0];
+                    if (ripple) ripple.remove();
+                    wrapper.appendChild(circle);
+                };
+            },
+            remove: function () {
+                this.digits.pop()
+            },
+            generate_key() {
+                return new Date.now();
+            }
+        }
+    }).mount('#app')
+</script>
+</body>
+
+</html>
